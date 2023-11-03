@@ -17,6 +17,8 @@
     "postcss-import": "^15.1.0",
     "standardized-audio-context": "^25.3.58",
     "tailwindcss": "^3.3.5",
-    "vite": "^4.4.11"
+    "vite": "^4.4.11",
+    "vue-slider-component": "^3.2.24",
+    "vuetify": "^3.3.23"
   }
 }

@@ -1,4 +1,6 @@
 <script setup>
+  import { ref } from 'vue'
+
   /* import HelloWorld from './components/HelloWorld.vue' */
   import { AudioContext, StereoPannerNode } from 'standardized-audio-context'
 
@@ -28,42 +30,68 @@
   //Plug the 2nd tone into right stereo, and then out channel 2
   osc2.connect(rightStereo).connect(channel2.destination)
 
-  //Start tones
+  //Start, then pause tones
   osc1.start()
   osc2.start()
+  pause()
 
+  const baseFreq = ref( osc1.frequency.value )
+  const beatFreq = ref( osc1.frequency.value - osc2.frequency.value )
 
   //FUNCTIONS
 
   //Resume
-  /* function resume() { */
-  /*   channel1.resume() */
-  /*   channel2.resume() */
-  /* } */
+  function resume() {
+    channel1.resume()
+    channel2.resume()
+  }
 
-  /* //Pause */
-  /* function pause() { */
-  /*   channel1.suspend() */
-  /*   channel2.suspend() */
-  /* } */
+  //Pause
+  function pause() {
+    channel1.suspend()
+    channel2.suspend()
+  }
 
-  /* //Update left stereo (channel 1's tone) */
-  /* function updateLeftStereo() { */
-  /*   const val = document.getElementById("leftStereo").value */
-  /*   osc1.frequency.value = val */
-  /* } */
+  //Update left stereo (channel 1's tone)
+  function updateBaseFreq(val) {
+    baseFreq.value = val
+    updateTwoTones()
+  }
 
-  /* //Update right stereo (channel 2's tone) */
-  /* function updateRightStereo() { */
-  /*   const val = document.getElementById("rightStereo").value */
-  /*   osc2.frequency.value = val */
-  /* } */
+  //Update right stereo (channel 2's tone)
+  function updateBeatFreq(val) {
+    beatFreq.value = val
+    updateTwoTones()
+  }
+
+  function updateTwoTones() {
+    osc1.frequency.value = baseFreq.value
+    osc2.frequency.value = baseFreq.value - beatFreq.value
+  }
 </script>
 
 
 <template>
   <div class="flex flex-col items-center justify-center h-full">
-    <h1>Hello wooorld</h1>
+    <label>Base Frequency: {{baseFreq}}</label>
+    <input
+      type="range"
+      min="100"
+      max="500"
+      :value="baseFreq"
+      @change="e => updateBaseFreq(e.target.value)"
+    />
+    <label>Beat Frequency: {{beatFreq}}</label>
+    <input
+      type="range"
+      min="0"
+      max="10"
+      step="0.5"
+      :value="beatFreq"
+      @input="e => updateBeatFreq(e.target.value)"
+    />
+    <button @click="resume">Play</button>
+    <button @click="pause">Pause</button>
   </div>
 </template>
 
@@ -75,5 +103,13 @@
     &:hover {
       color: red;
     }
+  }
+
+  label, button {
+    color: white;
+  }
+
+  input {
+    margin-bottom: 15px;
   }
 </style>
