@@ -33,6 +33,7 @@
   //Start, then pause tones
   osc1.start()
   osc2.start()
+  const paused = ref(false)
   pause()
 
   const baseFreq = ref( osc1.frequency.value )
@@ -44,12 +45,14 @@
   function resume() {
     channel1.resume()
     channel2.resume()
+    paused.value = false
   }
 
   //Pause
   function pause() {
     channel1.suspend()
     channel2.suspend()
+    paused.value = true
   }
 
   //Update left stereo (channel 1's tone)
@@ -90,26 +93,28 @@
       :value="beatFreq"
       @input="e => updateBeatFreq(e.target.value)"
     />
-    <button @click="resume">Play</button>
-    <button @click="pause">Pause</button>
+    <div>
+      <button @click="resume"
+        :class="!paused ? 'hidden' : ''"
+      >Play</button>
+      <button @click="pause"
+        :class="paused ? 'hidden' : ''"
+      >Pause</button>
+    </div>
   </div>
 </template>
 
 
 <style scoped>
-  h1 {
-    color: blue;
-
-    &:hover {
-      color: red;
-    }
-  }
-
   label, button {
     color: white;
   }
 
   input {
     margin-bottom: 15px;
+  }
+
+  button {
+    @apply border rounded-md px-1.5 py-0.5;
   }
 </style>
