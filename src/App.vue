@@ -1,5 +1,8 @@
 <script setup>
-  import { ref } from 'vue'
+  import { ref, computed, watch } from 'vue'
+  import add from 'date-fns/add'
+  import sub from 'date-fns/sub'
+  import formatDistanceToNowStrict from 'date-fns/formatDistanceToNowStrict'
 
   /* import HelloWorld from './components/HelloWorld.vue' */
   import { AudioContext, StereoPannerNode } from 'standardized-audio-context'
@@ -46,6 +49,8 @@
     channel1.resume()
     channel2.resume()
     paused.value = false
+    timeStart.value = new Date()
+    checkTime()
   }
 
   //Pause
@@ -53,6 +58,7 @@
     channel1.suspend()
     channel2.suspend()
     paused.value = true
+
   }
 
   //Update left stereo (channel 1's tone)
@@ -71,29 +77,74 @@
     osc1.frequency.value = baseFreq.value
     osc2.frequency.value = baseFreq.value - beatFreq.value
   }
+
+  const showTime = ref(false)
+  const time = ref(1)
+  const timeStart = ref(new Date())
+  const timeLeft = ref('0 seconds')
+  //Check time
+  setInterval(() => {
+    if (paused) {
+      checkTime()
+      if (timeLeft.value === '0 seconds' || timeLeft.value === '1 seconds') {
+        pause()
+      }
+    }
+  }, 1000)
+  function checkTime() {
+    timeLeft.value = formatDistanceToNowStrict(
+      add(timeStart.value, {
+        minutes: time.value
+      })
+    )
+  }
+
+  // Volume
+  const volume = ref(50)
 </script>
 
 
 <template>
-  <div class="flex flex-col items-center justify-center h-full">
-    <label>Base Frequency: {{baseFreq}}</label>
-    <input
-      type="range"
-      min="100"
-      max="500"
-      :value="baseFreq"
-      @change="e => updateBaseFreq(e.target.value)"
-    />
-    <label>Beat Frequency: {{beatFreq}}</label>
-    <input
-      type="range"
-      min="0"
-      max="10"
-      step="0.5"
-      :value="beatFreq"
-      @input="e => updateBeatFreq(e.target.value)"
-    />
-    <div>
+  <div id="app-container" class="flex flex-col items-center justify-center h-full">
+    <div id="beat-controls" class="flex flex-col text-white">
+      <label>Volume: {{volume}}</label>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        v-model="volume"
+      />
+      <label>Base Frequency: {{baseFreq}}</label>
+      <input
+        type="range"
+        min="100"
+        max="500"
+        :value="baseFreq"
+        @change="e => updateBaseFreq(e.target.value)"
+      />
+      <label>Beat Frequency: {{beatFreq}}</label>
+      <input
+        type="range"
+        min="0"
+        max="10"
+        step="0.5"
+        :value="beatFreq"
+        @input="e => updateBeatFreq(e.target.value)"
+      />
+      <label>Time:
+        <span v-if="time > 0">{{time}} minutes</span>
+        <span v-else id="infinitySpan">&infin;</span>
+      </label>
+      <input
+        type="range"
+        min="0"
+        max="60"
+        v-model="time"
+      />
+    </div>
+
+    <div class="text-center text-white">
+      <p v-if="time > 0  && !paused">{{timeLeft}}</p>
       <button @click="resume"
         :class="!paused ? 'hidden' : ''"
       >Play</button>
@@ -101,6 +152,7 @@
         :class="paused ? 'hidden' : ''"
       >Pause</button>
     </div>
+
   </div>
 </template>
 
@@ -116,5 +168,11 @@
 
   button {
     @apply border rounded-md px-1.5 py-0.5;
+  }
+
+  #infinitySpan {
+    font-size: 1.7rem;
+    line-height: 1rem;
+    vertical-align: text-top;
   }
 </style>

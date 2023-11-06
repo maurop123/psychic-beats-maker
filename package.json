@@ -13,6 +13,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.4.0",
     "autoprefixer": "^10.4.16",
+    "date-fns": "^2.30.0",
     "postcss": "^8.4.31",
     "postcss-import": "^15.1.0",
     "standardized-audio-context": "^25.3.58",
