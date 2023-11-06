@@ -3,6 +3,7 @@
   import add from 'date-fns/add'
   import sub from 'date-fns/sub'
   import formatDistanceToNowStrict from 'date-fns/formatDistanceToNowStrict'
+  import SliderField from './components/SliderField.vue'
 
   /* import HelloWorld from './components/HelloWorld.vue' */
   import { AudioContext, StereoPannerNode } from 'standardized-audio-context'
@@ -107,40 +108,21 @@
 <template>
   <div id="app-container" class="flex flex-col items-center justify-center h-full">
     <div id="beat-controls" class="flex flex-col text-white">
-      <label>Volume: {{volume}}</label>
-      <input
-        type="range"
-        min="0"
-        max="100"
-        v-model="volume"
+      <SliderField label="Volume"
+        v-model="volume" max="100"
       />
-      <label>Base Frequency: {{baseFreq}}</label>
-      <input
-        type="range"
-        min="100"
-        max="500"
-        :value="baseFreq"
-        @change="e => updateBaseFreq(e.target.value)"
+      <SliderField label="Base Frequency"
+        v-model="baseFreq" min="200" max="1100"
       />
-      <label>Beat Frequency: {{beatFreq}}</label>
-      <input
-        type="range"
-        min="0"
-        max="10"
-        step="0.5"
-        :value="beatFreq"
-        @input="e => updateBeatFreq(e.target.value)"
+      <SliderField label="Beat Frequency"
+        v-model="beatFreq" step="0.5"
       />
-      <label>Time:
+      <SliderField label="Time"
+        v-model="time" max="60"
+      >
         <span v-if="time > 0">{{time}} minutes</span>
         <span v-else id="infinitySpan">&infin;</span>
-      </label>
-      <input
-        type="range"
-        min="0"
-        max="60"
-        v-model="time"
-      />
+      </SliderField>
     </div>
 
     <div class="text-center text-white">
@@ -175,4 +157,5 @@
     line-height: 1rem;
     vertical-align: text-top;
   }
+
 </style>
