@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, computed, watch } from 'vue'
+  import { ref, reactive, computed, watch } from 'vue'
   import add from 'date-fns/add'
   import sub from 'date-fns/sub'
   import formatDistanceToNowStrict from 'date-fns/formatDistanceToNowStrict'
@@ -40,43 +40,24 @@
   const paused = ref(false)
   pause()
 
-  const baseFreq = ref( osc1.frequency.value )
-  const beatFreq = ref( osc1.frequency.value - osc2.frequency.value )
+  function pause() {
+    channel1.suspend()
+    channel2.suspend()
+    paused.value = true
+  }
 
-  watch(baseFreq, base => {
-    osc1.frequency.value = base
-    osc2.frequency.value = base - beatFreq.value
-  })
+//Base setup complete
 
-  watch(beatFreq, beat => {
-    osc2.frequency.value = baseFreq.value - beat
-  })
-
-  //TIME
-  const time = ref(0)
-
-  // Volume
-  const volume = ref(50)
-  
-  // Transition
-  const transitionTime = ref(10) //seconds
-  //hardcoding for testing
-  const baseFreq1 = ref(330)
-  const beatFreq1 = ref(4)
-  const time1 = ref(0)
-
-  const sequence = [
+  const sequence = reactive([
     {
-      base: 440,
-      beat: 7,
-      _time: 10,
+      baseFreq: 440,
+      beatFreq: 7,
+      time: 3, //seconds
+      transition: 0 //seconds
     },
-    {
-      base: 330,
-      beat: 4,
-      _time: 10
-    }
-  ]
+  ])
+
+  setInterval(() => console.log('sequence', sequence), 5000)
 
   function play() {
     channel1.resume()
@@ -84,26 +65,20 @@
     paused.value = false
   }
 
-  function pause() {
-    channel1.suspend()
-    channel2.suspend()
-    paused.value = true
-  }
-
   function delay (ms) {
     return new Promise(res => setTimeout(res, ms))
   }
 
-  let sequenceCount = 0
   async function playSequence() {
-    let { base, beat, _time } = sequence[sequenceCount]
-    console.log('play sequence', base, beat, _time)
-    osc1.frequency.linearRampToValueAtTime(base, channel1.currentTime + 5)
-    osc2.frequency.linearRampToValueAtTime(base - beat, channel2.currentTime + 5)
-    play()
-    await wait(_time * 1000)
-    sequenceCount++
-    playSequence()
+    for (let i=0; i<sequence.length; ++i) {
+      const { baseFreq, beatFreq, time, transition } = sequence[i]
+      console.log('beat', baseFreq, beatFreq, time, transition)
+      osc1.frequency.linearRampToValueAtTime(baseFreq, channel1.currentTime + transition)
+      osc2.frequency.linearRampToValueAtTime(baseFreq - beatFreq, channel2.currentTime + transition)
+      play()
+      await wait(time * 1000)
+      if (i === sequence.length-1) pause()
+    }
   }
 
   function wait(ms) {
@@ -118,13 +93,13 @@
 <template>
   <div id="app-container" class="flex flex-col items-center justify-center h-full text-white">
     <SingleBeat
-      v-model:baseFreq="baseFreq"
-      v-model:beatFreq="beatFreq"
-      v-model:time="time"
+      v-for="(beat, i) in sequence"
+      v-model:baseFreq="beat.baseFreq"
+      v-model:beatFreq="beat.beatFreq"
+      v-model:time="beat.time"
     />
 
     <div class="text-center mb-4">
-      <p v-if="time > 0  && !paused">{{timeLeft}}</p>
       <button @click="playSequence"
         :class="!paused ? 'hidden' : ''"
       >Play</button>
@@ -136,12 +111,6 @@
     <div class="text-center mb-4">
       <button @click="addToSequence"
       >Add To Sequence</button>
-    </div>
-
-    <div class="flex flex-col">
-      <SliderField label="Transition"
-        v-model="transitionTime" max="120"
-      />
     </div>
   </div>
 </template>
