@@ -4,8 +4,8 @@
   import sub from 'date-fns/sub'
   import formatDistanceToNowStrict from 'date-fns/formatDistanceToNowStrict'
   import SliderField from './components/SliderField.vue'
+  import SingleBeat from './components/SingleBeat.vue'
 
-  /* import HelloWorld from './components/HelloWorld.vue' */
   import { AudioContext, StereoPannerNode } from 'standardized-audio-context'
 
   //Channel 1
@@ -19,7 +19,7 @@
 
   //Tone 2
   const osc2 = channel2.createOscillator()
-  osc2.frequency.value = 435
+  osc2.frequency.value = 433
 
   //Channel 1 Left Stereo
   const leftStereo = new StereoPannerNode(channel1)
@@ -43,91 +43,89 @@
   const baseFreq = ref( osc1.frequency.value )
   const beatFreq = ref( osc1.frequency.value - osc2.frequency.value )
 
-  //FUNCTIONS
+  watch(baseFreq, base => {
+    osc1.frequency.value = base
+    osc2.frequency.value = base - beatFreq.value
+  })
 
-  //Resume
-  function resume() {
+  watch(beatFreq, beat => {
+    osc2.frequency.value = baseFreq.value - beat
+  })
+
+  //TIME
+  const time = ref(0)
+
+  // Volume
+  const volume = ref(50)
+  
+  // Transition
+  const transitionTime = ref(10) //seconds
+  //hardcoding for testing
+  const baseFreq1 = ref(330)
+  const beatFreq1 = ref(4)
+  const time1 = ref(0)
+
+  const sequence = [
+    {
+      base: 440,
+      beat: 7,
+      _time: 10,
+    },
+    {
+      base: 330,
+      beat: 4,
+      _time: 10
+    }
+  ]
+
+  function play() {
     channel1.resume()
     channel2.resume()
     paused.value = false
-    timeStart.value = new Date()
-    checkTime()
   }
 
-  //Pause
   function pause() {
     channel1.suspend()
     channel2.suspend()
     paused.value = true
-
   }
 
-  //Update left stereo (channel 1's tone)
-  function updateBaseFreq(val) {
-    baseFreq.value = val
-    updateTwoTones()
+  function delay (ms) {
+    return new Promise(res => setTimeout(res, ms))
   }
 
-  //Update right stereo (channel 2's tone)
-  function updateBeatFreq(val) {
-    beatFreq.value = val
-    updateTwoTones()
+  let sequenceCount = 0
+  async function playSequence() {
+    let { base, beat, _time } = sequence[sequenceCount]
+    console.log('play sequence', base, beat, _time)
+    osc1.frequency.linearRampToValueAtTime(base, channel1.currentTime + 5)
+    osc2.frequency.linearRampToValueAtTime(base - beat, channel2.currentTime + 5)
+    play()
+    await wait(_time * 1000)
+    sequenceCount++
+    playSequence()
   }
 
-  function updateTwoTones() {
-    osc1.frequency.value = baseFreq.value
-    osc2.frequency.value = baseFreq.value - beatFreq.value
+  function wait(ms) {
+    return new Promise(res => {
+        setTimeout(res, ms);
+    });
   }
 
-  const showTime = ref(false)
-  const time = ref(1)
-  const timeStart = ref(new Date())
-  const timeLeft = ref('0 seconds')
-  //Check time
-  setInterval(() => {
-    if (paused) {
-      checkTime()
-      if (timeLeft.value === '0 seconds' || timeLeft.value === '1 seconds') {
-        pause()
-      }
-    }
-  }, 1000)
-  function checkTime() {
-    timeLeft.value = formatDistanceToNowStrict(
-      add(timeStart.value, {
-        minutes: time.value
-      })
-    )
-  }
-
-  // Volume
-  const volume = ref(50)
 </script>
 
 
 <template>
-  <div id="app-container" class="flex flex-col items-center justify-center h-full">
-    <div id="beat-controls" class="flex flex-col text-white">
-      <SliderField label="Volume"
-        v-model="volume" max="100"
-      />
-      <SliderField label="Base Frequency"
-        v-model="baseFreq" min="200" max="1100"
-      />
-      <SliderField label="Beat Frequency"
-        v-model="beatFreq" step="0.5"
-      />
-      <SliderField label="Time"
-        v-model="time" max="60"
-      >
-        <span v-if="time > 0">{{time}} minutes</span>
-        <span v-else id="infinitySpan">&infin;</span>
-      </SliderField>
-    </div>
+  <div id="app-container" class="flex flex-col items-center justify-center h-full text-white">
+    <SingleBeat
+      v-model:baseFreq="baseFreq"
+      v-model:beatFreq="beatFreq"
+      v-model:time="time"
+    />
 
-    <div class="text-center text-white">
+    <div class="text-center mb-4">
       <p v-if="time > 0  && !paused">{{timeLeft}}</p>
-      <button @click="resume"
+      <button @click="playSequence"
         :class="!paused ? 'hidden' : ''"
       >Play</button>
       <button @click="pause"
@@ -135,27 +133,22 @@
       >Pause</button>
     </div>
 
+    <div class="text-center mb-4">
+      <button @click="addToSequence"
+      >Add To Sequence</button>
+    </div>
+
+    <div class="flex flex-col">
+      <SliderField label="Transition"
+        v-model="transitionTime" max="120"
+      />
+    </div>
   </div>
 </template>
 
 
 <style scoped>
-  label, button {
-    color: white;
-  }
-
-  input {
-    margin-bottom: 15px;
-  }
-
   button {
     @apply border rounded-md px-1.5 py-0.5;
   }
-
-  #infinitySpan {
-    font-size: 1.7rem;
-    line-height: 1rem;
-    vertical-align: text-top;
-  }
-
 </style>
