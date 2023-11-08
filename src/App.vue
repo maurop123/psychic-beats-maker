@@ -37,8 +37,11 @@
   //Start, then pause tones
   osc1.start()
   osc2.start()
-  const paused = ref(false)
-  pause()
+  channel1.suspend()
+  channel2.suspend()
+  const paused = ref(true)
+
+  //Setup complete
 
   function pause() {
     channel1.suspend()
@@ -46,7 +49,11 @@
     paused.value = true
   }
 
-//Base setup complete
+  function resume() {
+    channel1.resume()
+    channel2.resume()
+    paused.value = false
+  }
 
   const sequence = reactive([
     {
@@ -59,11 +66,6 @@
 
   /* setInterval(() => console.log('sequence', sequence), 5000) */
 
-  function resume() {
-    channel1.resume()
-    channel2.resume()
-    paused.value = false
-  }
 
   function delay (ms) {
     return new Promise(res => setTimeout(res, ms))
@@ -107,37 +109,70 @@
 </script>
 
 <template>
-  <div id="app-container" class="flex flex-col items-center justify-center h-full text-white">
-    <SingleBeat
-      v-for="(beat, i) in sequence"
-      v-model:baseFreq="beat.baseFreq"
-      v-model:beatFreq="beat.beatFreq"
-      v-model:time="beat.time"
-      v-model:transition="beat.transition"
-      :noShowTransition="i===0"
-    />
+  <div id="app-container" class="flex">
+    <div class="flex flex-col items-center justify-center h-full text-white">
+      <div v-for="(beat, i) in sequence">
+        <hr v-if="i > 0" class="mb-3 mt-1">
+        <p v-if="sequence.length > 1"
+          class="text-xs text-right m-1 cursor-pointer"
+          @click="sequence.splice(i,1)"
+        >
+          X
+        </p>
+        <SingleBeat class="mt-3"
+          v-model:baseFreq="beat.baseFreq"
+          v-model:beatFreq="beat.beatFreq"
+        />
+        <SliderField label="Duration" unit="s"
+          class="mt-1"
+          v-if="i < sequence.length -1"
+          :modelValue="beat.time"
+          @update:modelValue="$emit('update:time', Number($event))"
+          max="60"
+        />
+        <SliderField label="Transition Time" unit="s"
+          v-if="i < sequence.length -1"
+          :modelValue="transition"
+          @update:modelValue="$emit('update:transition', Number($event))"
+          max="120"
+        />
+        <p v-if="sequence.length > 1"
+          class="text-sm text-slate-100">
+          Beat {{i+1}}
+        </p>
+    <!--<p v-if="time === 0" class="slider-disclaimer">t = 0 will play indefinitely</p>-->
+      </div>
 
-    <div class="text-center mb-4" v-if="paused">
-      <button @click="addBeat"
-      >Add Beat</button>
-    </div>
-
-    <div class="text-center mb-4" v-if="paused">
-      <button @click="playSequence"
-        :class="!paused ? 'hidden' : ''"
-      >Play</button>
-      <!--<button @click="pause"
-        :class="paused ? 'hidden' : ''"
-      >Pause</button>-->
-    </div>
-    <div class="text-center mb-4" v-else>
-      <p>Beat {{activeBeatI}} : {{timeLeft}} seconds left</p>
+      <div class="flex flex-col text-center mt-6 mb-4" v-if="paused">
+        <button @click="addBeat" class="mb-4">
+          Add New Beat
+        </button>
+        <button @click="addBeat"
+          v-if="sequence.length > 1"
+        > Preview Sequence
+        </button>
+        <!--<button @click="playSequence"
+          :class="!paused ? 'hidden' : ''"
+        >Play Sequence</button>
+        <button @click="pause"
+          :class="paused ? 'hidden' : ''"
+        >Pause</button>-->
+      </div>
+      <div class="text-center mb-4" v-else>
+        <p>Beat {{activeBeatI}} : {{timeLeft}} seconds left</p>
+      </div>
     </div>
   </div>
 </template>
 
+<style>
+  button {
+    @apply border rounded-md;
+  }
+</style>
+
 <style scoped>
   button {
-    @apply border rounded-md px-1.5 py-0.5;
+    @apply p-1;
   }
 </style>
