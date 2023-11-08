@@ -106,7 +106,6 @@
   }
 </script>
 
-
 <template>
   <div id="app-container" class="flex flex-col items-center justify-center h-full text-white">
     <SingleBeat
@@ -136,7 +135,6 @@
     </div>
   </div>
 </template>
-
 
 <style scoped>
   button {
