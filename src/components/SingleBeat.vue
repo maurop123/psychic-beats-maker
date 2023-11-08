@@ -1,7 +1,7 @@
 <script setup>
   import SliderField from './SliderField.vue'
 
-  defineProps([ 'baseFreq', 'beatFreq', 'time' ])
+  defineProps([ 'baseFreq', 'beatFreq', 'time', 'transition', 'noShowTransition' ])
 
   defineEmits([ 'update:baseFreq', 'update:beatFreq', 'update:time' ])
 </script>
@@ -11,38 +11,34 @@
       <!--<SliderField label="Volume"
         v-model="volume" max="100"
       />-->
-      <!--<SliderField label="Transition"
-        v-model="transitionTime" max="120"
-      />-->
-      <SliderField label="Base Frequency"
+      <div v-if="!noShowTransition">
+        <hr class="mb-7 mt-4">
+        <SliderField label="Transition" unit="s"
+          :modelValue="transition"
+          @update:modelValue="$emit('update:transition', Number($event))"
+          max="120"
+        />
+      </div>
+      <SliderField label="Base Frequency" unit="hz"
         :modelValue="baseFreq" 
         @update:modelValue="$emit('update:baseFreq', Number($event))"
         min="200" max="1100"
       />
-      <SliderField label="Beat Frequency"
+      <SliderField label="Beat Frequency" unit="hz"
         :modelValue="beatFreq"
         @update:modelValue="$emit('update:beatFreq', Number($event))"
         step="0.5"
       />
-      <SliderField label="Time"
+      <SliderField label="Time" unit="s"
         :modelValue="time"
         @update:modelValue="$emit('update:time', Number($event))"
         max="60"
-      >
-        <span v-if="time > 0">{{time}} seconds</span>
-        <span v-else id="infinitySpan">&infin;</span>
-      </SliderField>
-      <p v-if="time === 0" class="slider-disclaimer">t = 0 will play indefinitely</p>
+      />
+      <!--<p v-if="time === 0" class="slider-disclaimer">t = 0 will play indefinitely</p>-->
     </div>
 </template>
 
 <style scoped>
-  #infinitySpan {
-    font-size: 1.7rem;
-    line-height: 1rem;
-    vertical-align: text-top;
-  }
-
   .slider-disclaimer {
     font-size: 0.8rem;
     margin-top: -15px;

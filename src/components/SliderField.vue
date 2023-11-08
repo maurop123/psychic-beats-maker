@@ -1,5 +1,5 @@
 <script setup>
-  defineProps(['label', 'min', 'max', 'step', 'modelValue'])
+  defineProps(['label', 'min', 'max', 'step', 'modelValue', 'unit'])
   defineEmits(['update:modelValue'])
 </script>
 
@@ -8,7 +8,7 @@
     <label>{{label}}
       <span class="fieldValue">
         <slot>
-          {{modelValue}}
+          {{modelValue}} {{unit}}
         </slot>
       </span>
     </label>

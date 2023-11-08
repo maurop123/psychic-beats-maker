@@ -57,9 +57,9 @@
     },
   ])
 
-  setInterval(() => console.log('sequence', sequence), 5000)
+  /* setInterval(() => console.log('sequence', sequence), 5000) */
 
-  function play() {
+  function resume() {
     channel1.resume()
     channel2.resume()
     paused.value = false
@@ -69,14 +69,23 @@
     return new Promise(res => setTimeout(res, ms))
   }
 
+  const activeBeatI = ref(0)
+  const timeLeft = ref(0)
+  
   async function playSequence() {
     for (let i=0; i<sequence.length; ++i) {
       const { baseFreq, beatFreq, time, transition } = sequence[i]
       console.log('beat', baseFreq, beatFreq, time, transition)
+      activeBeatI.value = i+1
+      timeLeft.value = time
       osc1.frequency.linearRampToValueAtTime(baseFreq, channel1.currentTime + transition)
       osc2.frequency.linearRampToValueAtTime(baseFreq - beatFreq, channel2.currentTime + transition)
-      play()
+      resume()
+      const interval = setInterval(() => {
+        timeLeft.value = timeLeft.value - 1
+      }, 1000)
       await wait(time * 1000)
+      clearInterval(interval)
       if (i === sequence.length-1) pause()
     }
   }
@@ -87,6 +96,14 @@
     });
   }
 
+  function addBeat() {
+    sequence.push({
+      baseFreq: 330,
+      beatFreq: 4,
+      time: 60,
+      transition: 10,
+    })
+  }
 </script>
 
 
@@ -97,20 +114,25 @@
       v-model:baseFreq="beat.baseFreq"
       v-model:beatFreq="beat.beatFreq"
       v-model:time="beat.time"
+      v-model:transition="beat.transition"
+      :noShowTransition="i===0"
     />
 
-    <div class="text-center mb-4">
+    <div class="text-center mb-4" v-if="paused">
+      <button @click="addBeat"
+      >Add Beat</button>
+    </div>
+
+    <div class="text-center mb-4" v-if="paused">
       <button @click="playSequence"
         :class="!paused ? 'hidden' : ''"
       >Play</button>
-      <button @click="pause"
+      <!--<button @click="pause"
         :class="paused ? 'hidden' : ''"
-      >Pause</button>
+      >Pause</button>-->
     </div>
-
-    <div class="text-center mb-4">
-      <button @click="addToSequence"
-      >Add To Sequence</button>
+    <div class="text-center mb-4" v-else>
+      <p>Beat {{activeBeatI}} : {{timeLeft}} seconds left</p>
     </div>
   </div>
 </template>
