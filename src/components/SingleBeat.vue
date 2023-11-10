@@ -1,61 +1,35 @@
 <script setup>
-  import { ref } from 'vue'
+  import { ref, watch } from 'vue'
   import SliderField from './SliderField.vue'
 
-  defineProps([ 'baseFreq', 'beatFreq', 'time', 'transition', 'noShowTransition' ])
+  //Audio Setup
+  import {osc1, osc2, play, pause} from '../audio-setup.js'
 
-  defineEmits([ 'update:baseFreq', 'update:beatFreq', 'update:time' ])
+  const props = defineProps([ 'baseFreq', 'beatFreq'])
+  const emit = defineEmits([ 'update:baseFreq', 'update:beatFreq', 'update:time'])
 
-  // Setup Audio
-  import { AudioContext, StereoPannerNode } from 'standardized-audio-context'
-
-  //Channel 1
-  const channel1 = new AudioContext();
-
-  //Channel 2
-  const channel2 = new AudioContext();
-
-  //Tone 1
-  const osc1 = channel1.createOscillator() //default frequency is 440HZ
-
-  //Tone 2
-  const osc2 = channel2.createOscillator()
-  osc2.frequency.value = 433
-
-  //Channel 1 Left Stereo
-  const leftStereo = new StereoPannerNode(channel1)
-  leftStereo.pan.value = -1 // -1 left side, 0 balanced, 1 right side
-
-  //Channel 2 right Stereo
-  const rightStereo = new StereoPannerNode(channel2, { pan: 1}) //shortcut: set pan in creation options
-
-  //Plug the 1st tone into left stereo, and then out channel 1
-  osc1.connect(leftStereo).connect(channel1.destination)
-
-  //Plug the 2nd tone into right stereo, and then out channel 2
-  osc2.connect(rightStereo).connect(channel2.destination)
-
-  //Start oscillators
-  osc1.start()
-  osc2.start()
-
-  //Pause channels
-  channel1.suspend()
-  channel2.suspend()
   const paused = ref(true)
 
-  function preview() {
-    channel1.resume()
-    channel2.resume()
-    paused.value = false 
-  }
+  const base = ref(440)
+  const beat = ref(7)
 
-  function pause() {
-    channel1.suspend()
-    channel2.suspend()
-    paused.value = true
+  watch(base, newVal => {
+    osc1.frequency.value = newVal
+    osc2.frequency.value = newVal - beat.value
+    emit('update:baseFreq', base)
+  })
+
+  watch(beat, newVal => {
+    osc2.frequency.value = base.value - newVal
+    emit('update:beatFreq', beat)
+  })
+
+  function preview() {
+    osc1.frequency.value = props.baseFreq
+    osc2.frequency.value = props.baseFreq - props.beatFreq
+    play()
+    paused.value = false
   }
- 
 </script>
 
 <template>
@@ -65,14 +39,12 @@
     />-->
     <div class="preview group flex flex-row">
       <div class="flex flex-col">
-        <SliderField label="Base Frequency" unit="hz"
-          :modelValue="baseFreq" 
-          @update:modelValue="$emit('update:baseFreq', Number($event))"
+        <SliderField label="Base Freq" unit="hz"
+          v-model="base"
           min="200" max="1100"
         />
-        <SliderField label="Beat Frequency" unit="hz"
-          :modelValue="beatFreq"
-          @update:modelValue="$emit('update:beatFreq', Number($event))"
+        <SliderField label="Beat Freq" unit="hz"
+          v-model="beat"
           step="0.5"
         />
       </div>
@@ -80,7 +52,7 @@
         <button @click="preview" v-if="paused">
           Preview
         </button>
-        <button @click="pause" v-else>Pause</button>
+        <button @click="() => {pause();paused=true}" v-else>Pause</button>
       </div>
     </div>
   </div>
