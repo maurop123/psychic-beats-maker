@@ -39,14 +39,15 @@
     />-->
     <div class="preview group flex flex-row">
       <div class="flex flex-col">
-        <SliderField label="Base Freq" unit="hz"
+        <SliderField label="Base Frequency" unit="hz"
           v-model="base"
           min="200" max="1100"
 		  class="beat-slider"
         />
-        <SliderField label="Beat Freq" unit="hz"
+        <SliderField label="Beat Frequency" unit="hz"
           v-model="beat"
-          step="0.5"
+          step="0.25"
+		  max="20"
 		  class="beat-slider"
         />
       </div>

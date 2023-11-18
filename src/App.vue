@@ -25,7 +25,8 @@
       transition: {
 	    minutes: 0,
 		seconds: 10
-	  }
+	  },
+	  id: 0
     },
   ])
 
@@ -92,7 +93,8 @@
       transition: {
 	    minutes: 0,
 		seconds: 10
-	  }
+	  },
+	  id: sequence[sequence.length-1].id + 1  //auto increment
     })
   }
 </script>
@@ -100,8 +102,10 @@
 <template>
   <div id="app-container" class="flex mt-8">
     <div class="flex flex-col items-center justify-center h-full text-white">
-      <div v-for="(beat, i) in sequence">
+
+      <div v-for="(beat, i) in sequence" :key="beat.id" :name="`beat-${beat.id}`">
         <hr v-if="i > 0" class="mb-3 mt-1">
+
         <div class="flex flex-row justify-between">
           <u v-if="sequence.length > 1"
             class="text-sm text-slate-300">
@@ -114,38 +118,52 @@
             X
           </p>
         </div>
+
         <SingleBeat class="mt-3"
           v-model:baseFreq="beat.baseFreq"
           v-model:beatFreq="beat.beatFreq"
         />
+
 		<div v-if="i < sequence.length - 1">
-			<label>Beat Duration</label>
-			<div class="flex flex-row">
-				<SliderField unit="m"
-				  class="mt-1"
-				  v-model="beat.duration.minutes"
-				  max="60"
-				/>
-				<SliderField unit="s"
-				  class="mt-1 ml-3"
-				  v-model="beat.duration.seconds"
-				  max="60"
-				/>
+			<div class="flex flex-row justify-between mb-4">
+				<label>Beat Duration</label>
+				<div class="flex flex-row">
+					<div>
+						<input type="number"
+							class="ml-3"
+							v-model="beat.duration.minutes"
+						>
+						<span>min</span>
+					</div>
+					<div>
+						<input type="number"
+							class="ml-3"
+							v-model="beat.duration.seconds"
+						>
+						<span>sec</span>
+					</div>
+				</div>
 			</div>
-			<label>Transition</label>
-			<div class="flex flex-row">
-				<SliderField unit="m"
-				  v-model="beat.transition.minutes"
-				  max="60"
-				/>
-				<SliderField unit="s"
-				  class="ml-3"
-				  v-model="beat.transition.seconds"
-				  max="60"
-				/>
+			<div class="flex flex-row justify-between w-full mb-4">
+				<label>Transition</label>
+				<div class="flex flex-row">
+					<div>
+						<input type="number"
+							class="ml-3"
+							v-model="beat.transition.minutes"
+						>
+						<span>min</span>
+					</div>
+					<div class="justify-self-end">
+						<input type="number"
+							class="ml-3"
+							v-model="beat.transition.seconds"
+						>
+						<span>sec</span>
+					</div>
+				</div>
 			</div>
 		</div>
-    <!--<p v-if="duration === 0" class="slider-disclaimer">t = 0 will play indefinitely</p>-->
       </div>
 
       <div class="flex flex-col text-center mt-6 mb-4">
@@ -162,6 +180,7 @@
         > Pause Track
         </button>
       </div>
+
     </div>
   </div>
 </template>
@@ -175,5 +194,18 @@
 <style scoped>
   button {
     @apply p-1;
+  }
+
+  .flex-row input {
+	height: 1.5rem;
+	width: 3rem;
+	background-color: #232327;
+	color: white;
+	border-radius: 7px;
+	border-color: #0c0c0d;
+	border-width: 1px;
+	appearance: textfield;
+	@apply mx-2;
+	text-align: center;
   }
 </style>
