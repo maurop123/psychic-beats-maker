@@ -6,7 +6,7 @@
   import {osc1, osc2, play, pause} from '../audio-setup.js'
 
   const props = defineProps([ 'baseFreq', 'beatFreq'])
-  const emit = defineEmits([ 'update:baseFreq', 'update:beatFreq', 'update:time'])
+  const emit = defineEmits([ 'update:baseFreq', 'update:beatFreq', 'update:duration'])
 
   const paused = ref(true)
 
@@ -42,10 +42,12 @@
         <SliderField label="Base Freq" unit="hz"
           v-model="base"
           min="200" max="1100"
+		  class="beat-slider"
         />
         <SliderField label="Beat Freq" unit="hz"
           v-model="beat"
           step="0.5"
+		  class="beat-slider"
         />
       </div>
       <div class="playPauseButton">
@@ -59,18 +61,17 @@
 </template>
 
 <style scoped>
-  .slider-disclaimer {
-    font-size: 0.8rem;
-    margin-top: -15px;
-    margin-left: 6px;
-    @apply mb-4;
-  }
-
   .playPauseButton {
     @apply flex items-center;
 
     button {
       @apply p-1 ml-5;
     }
+  }
+</style>
+
+<style>
+  .beat-slider input {
+    width: 19rem;
   }
 </style>

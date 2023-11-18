@@ -18,8 +18,14 @@
     {
       baseFreq: 440,
       beatFreq: 7,
-      time: 3, //seconds
-      transition: 10 //seconds
+      duration: {
+	    minutes: 1,
+		seconds: 0
+	  },
+      transition: {
+	    minutes: 0,
+		seconds: 10
+	  }
     },
   ])
 
@@ -32,7 +38,9 @@
 
   let timeout
   function startTrack() {
-    const { baseFreq, beatFreq, time, transition } = sequence[0]
+    const { baseFreq, beatFreq, duration, transition } = sequence[0]
+	const _duration = duration.minutes*60 + duration.seconds
+	const _transition = transition.minutes*60 + transition.seconds
     osc1.frequency.value = baseFreq
     osc2.frequency.value = baseFreq - beatFreq
     play()
@@ -43,13 +51,15 @@
       } else {
         pause()
       }
-    }, (time+transition)*1000)
+    }, (_duration+_transition)*1000)
   }
 
   function playNextBeat(i) {
-    const { baseFreq, beatFreq, time, transition } = sequence[i]
-    osc1.frequency.linearRampToValueAtTime(baseFreq, ctx.currentTime + transition)
-    osc2.frequency.linearRampToValueAtTime(baseFreq - beatFreq, ctx.currentTime + transition)
+    const { baseFreq, beatFreq, duration, transition } = sequence[i]
+	const _duration = duration.minutes*60 + duration.seconds
+	const _transition = transition.minutes*60 + transition.seconds
+    osc1.frequency.linearRampToValueAtTime(baseFreq, ctx.currentTime + _transition)
+    osc2.frequency.linearRampToValueAtTime(baseFreq - beatFreq, ctx.currentTime + _transition)
 
     timeout = setTimeout(() => {
       if (i < sequence.length - 1) {
@@ -57,7 +67,7 @@
       } else {
         pause()
       }
-    }, (time+transition)*1000)
+    }, (_duration+_transition)*1000)
   }
 
   function pauseTrack() {
@@ -65,28 +75,6 @@
     pause()
   }
   
-
-  const activeBeatI = ref(0)
-  const timeLeft = ref(0)
-
-  async function playSequence() {
-    for (let i=0; i<sequence.length; ++i) {
-      const { baseFreq, beatFreq, time, transition } = sequence[i]
-      console.log('beat', baseFreq, beatFreq, time, transition)
-      activeBeatI.value = i+1
-      timeLeft.value = time
-      osc1.frequency.linearRampToValueAtTime(baseFreq, channel1.currentTime + transition)
-      osc2.frequency.linearRampToValueAtTime(baseFreq - beatFreq, channel2.currentTime + transition)
-      play()
-      const interval = setInterval(() => {
-        timeLeft.value = timeLeft.value - 1
-      }, 1000)
-      await wait(time * 1000)
-      clearInterval(interval)
-      if (i === sequence.length-1) pause()
-    }
-  }
-
   function wait(ms) {
     return new Promise(res => {
         setTimeout(res, ms);
@@ -97,11 +85,16 @@
     sequence.push({
       baseFreq: 330,
       beatFreq: 4,
-      time: 60,
-      transition: 10,
+      duration: {
+	    minutes: 0,
+		seconds: 30
+	  },
+      transition: {
+	    minutes: 0,
+		seconds: 10
+	  }
     })
   }
-
 </script>
 
 <template>
@@ -125,20 +118,34 @@
           v-model:baseFreq="beat.baseFreq"
           v-model:beatFreq="beat.beatFreq"
         />
-        <SliderField label="Duration" unit="s"
-          class="mt-1"
-          v-if="i < sequence.length -1"
-          :modelValue="beat.time"
-          @update:modelValue="$emit('update:time', Number($event))"
-          max="60"
-        />
-        <SliderField label="Transition" unit="s"
-          v-if="i < sequence.length -1"
-          :modelValue="transition"
-          @update:modelValue="$emit('update:transition', Number($event))"
-          max="120"
-        />
-    <!--<p v-if="time === 0" class="slider-disclaimer">t = 0 will play indefinitely</p>-->
+		<div v-if="i < sequence.length - 1">
+			<label>Beat Duration</label>
+			<div class="flex flex-row">
+				<SliderField unit="m"
+				  class="mt-1"
+				  v-model="beat.duration.minutes"
+				  max="60"
+				/>
+				<SliderField unit="s"
+				  class="mt-1 ml-3"
+				  v-model="beat.duration.seconds"
+				  max="60"
+				/>
+			</div>
+			<label>Transition</label>
+			<div class="flex flex-row">
+				<SliderField unit="m"
+				  v-model="beat.transition.minutes"
+				  max="60"
+				/>
+				<SliderField unit="s"
+				  class="ml-3"
+				  v-model="beat.transition.seconds"
+				  max="60"
+				/>
+			</div>
+		</div>
+    <!--<p v-if="duration === 0" class="slider-disclaimer">t = 0 will play indefinitely</p>-->
       </div>
 
       <div class="flex flex-col text-center mt-6 mb-4">
