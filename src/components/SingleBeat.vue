@@ -3,40 +3,32 @@
   import SliderField from './SliderField.vue'
 
   //Audio Setup
-  import {osc1, osc2, play, pause} from '../audio-setup.js'
+  import BeatPlayer from '../BeatPlayer.js'
+  const beatPlayer = new BeatPlayer()
+  const paused = ref(true)
 
   const props = defineProps([ 'baseFreq', 'beatFreq'])
   const emit = defineEmits([ 'update:baseFreq', 'update:beatFreq', 'update:duration'])
 
-  const paused = ref(true)
+  beatPlayer.changeBaseFrequency(props.baseFreq)
+  beatPlayer.changeBeatFrequency(props.beatFreq)
 
-  const base = ref(440)
-  const beat = ref(7)
+  const base = ref(props.baseFreq)
+  const beat = ref(props.beatFreq)
 
   watch(base, newVal => {
-    osc1.frequency.value = newVal
-    osc2.frequency.value = newVal - beat.value
-    emit('update:baseFreq', base)
+	  beatPlayer.changeBaseFrequency(newVal)
+	  emit('update:baseFreq', base)
   })
 
   watch(beat, newVal => {
-    osc2.frequency.value = base.value - newVal
+    beatPlayer.changeBeatFrequency(newVal)
     emit('update:beatFreq', beat)
   })
-
-  function preview() {
-    osc1.frequency.value = props.baseFreq
-    osc2.frequency.value = props.baseFreq - props.beatFreq
-    play()
-    paused.value = false
-  }
 </script>
 
 <template>
   <div class="controls flex flex-col text-white">
-    <!--<SliderField label="Volume"
-      v-model="volume" max="100"
-    />-->
     <div class="preview group flex flex-row">
       <div class="flex flex-col">
         <SliderField label="Base Frequency" unit="hz"
@@ -52,10 +44,10 @@
         />
       </div>
       <div class="playPauseButton">
-        <button @click="preview" v-if="paused">
+        <button @click="beatPlayer.play(paused)" v-if="beatPlayer.paused">
           Preview
         </button>
-        <button @click="() => {pause();paused=true}" v-else>Pause</button>
+        <button @click="beatPlayer.pause(paused)" v-else>Pause</button>
       </div>
     </div>
   </div>

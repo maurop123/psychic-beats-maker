@@ -4,20 +4,22 @@
   import SingleBeat from './components/SingleBeat.vue'
 
   //Audio Setup
-  import {osc1, osc2, play, pause as _pause, ctx} from './audio-setup.js'
+  import BeatPlayer from './BeatPlayer.js'
+  const beatPlayer = new BeatPlayer()
+  const {osc1, osc2, play, pause, ctx} = beatPlayer
 
   const paused = ref(true)
 
-  function pause() {
+  function _pause() {
     paused.value = true
-    _pause()
+    pause()
   }
 
   // Track
   const sequence = reactive([
     {
-      baseFreq: 440,
-      beatFreq: 7,
+      baseFreq: 330,
+      beatFreq: 5,
       duration: {
 	    minutes: 1,
 		seconds: 0
@@ -50,7 +52,7 @@
       if (sequence.length > 1) {
         playNextBeat(1)
       } else {
-        pause()
+        _pause()
       }
     }, (_duration+_transition)*1000)
   }
@@ -66,14 +68,14 @@
       if (i < sequence.length - 1) {
         playNextBeat(i+1)
       } else {
-        pause()
+        _pause()
       }
     }, (_duration+_transition)*1000)
   }
 
   function pauseTrack() {
     clearTimeout(timeout)
-    pause()
+    _pause()
   }
   
   function wait(ms) {
@@ -94,7 +96,7 @@
 	    minutes: 0,
 		seconds: 10
 	  },
-	  id: sequence[sequence.length-1].id + 1  //auto increment
+	  id: (new Date()).getTime()
     })
   }
 </script>
