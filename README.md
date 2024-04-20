@@ -4,4 +4,4 @@ Compose binaural beats with transitions into meditative sequences, which may ind
 
 ## Credits
 
-This app is built with Vue 3 on top of Vite. Amazing open source projects. Please support!
+This app is built with Vue 3 on top of Vite. Amazing open source projects. Support your open source!
